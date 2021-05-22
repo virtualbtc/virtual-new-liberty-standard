@@ -28,15 +28,15 @@ contract VirtualNewLibertyStandard {
         return sales.length;
     }
 
-    function sell(address seller, uint256 amount, uint256 price) external {
+    function sell(uint256 amount, uint256 price) external {
         vbtc.transferFrom(msg.sender, address(this), amount);
         sales.push(Sale({
-            seller: seller,
+            seller: msg.sender,
             amount: amount,
             soldAmount: 0,
             price: price
         }));
-        emit Sell(seller, amount, price);
+        emit Sell(msg.sender, amount, price);
     }
 
     function removeSale(uint256 saleId) internal {
