@@ -5,6 +5,11 @@ import "./VirtualBitcoinInterface.sol";
 
 contract VirtualNewLibertyStandard {
 
+    event Sell(address indexed seller, uint256 amount, uint256 price);
+    event RemoveSale(uint256 indexed saleId);
+    event Buy(uint256 indexed saleId, address indexed buyer, uint256 amount);
+    event CancelSale(uint256 indexed saleId);
+
     VirtualBitcoinInterface vbtc;
 
     struct Sale {
@@ -13,7 +18,7 @@ contract VirtualNewLibertyStandard {
         uint256 soldAmount;
         uint256 price;
     }
-    Sale[] private sales;
+    Sale[] public sales;
 
     constructor(address vbtcAddress) {
         vbtc = VirtualBitcoinInterface(vbtcAddress);
@@ -31,10 +36,12 @@ contract VirtualNewLibertyStandard {
             soldAmount: 0,
             price: price
         }));
+        emit Sell(seller, amount, price);
     }
 
     function removeSale(uint256 saleId) internal {
         delete sales[saleId];
+        emit RemoveSale(saleId);
     }
 
     function buy(uint256 saleId) payable external {
@@ -50,6 +57,8 @@ contract VirtualNewLibertyStandard {
             removeSale(saleId);
         }
         sale.soldAmount = _soldAmount;
+
+        emit Buy(saleId, msg.sender, amount);
     }
 
     function cancelSale(uint256 saleId) external {
@@ -57,5 +66,6 @@ contract VirtualNewLibertyStandard {
         require(sale.seller == msg.sender);
         vbtc.transfer(msg.sender, sale.amount - sale.soldAmount);
         removeSale(saleId);
+        emit CancelSale(saleId);
     }
 }
