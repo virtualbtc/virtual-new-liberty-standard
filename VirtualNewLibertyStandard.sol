@@ -18,6 +18,10 @@ contract VirtualNewLibertyStandard {
         vbtc = VirtualBitcoinInterface(vbtcAddress);
     }
 
+    function saleCount() external view returns (uint256) {
+        return sales.length;
+    }
+
     function sell(address seller, uint256 amount, uint256 price) external {
         vbtc.transferFrom(msg.sender, address(this), amount);
         sales.push(Sale({
