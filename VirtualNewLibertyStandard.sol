@@ -7,7 +7,7 @@ contract VirtualNewLibertyStandard {
 
     event Sell(address indexed seller, uint256 amount, uint256 price);
     event RemoveSale(uint256 indexed saleId);
-    event Buy(uint256 indexed saleId, address indexed buyer, uint256 amount);
+    event Buy(uint256 indexed saleId, address indexed buyer);
     event CancelSale(uint256 indexed saleId);
 
     VirtualBitcoinInterface vbtc;
@@ -15,7 +15,6 @@ contract VirtualNewLibertyStandard {
     struct Sale {
         address seller;
         uint256 amount;
-        uint256 soldAmount;
         uint256 price;
     }
     Sale[] public sales;
@@ -33,7 +32,6 @@ contract VirtualNewLibertyStandard {
         sales.push(Sale({
             seller: msg.sender,
             amount: amount,
-            soldAmount: 0,
             price: price
         }));
         emit Sell(msg.sender, amount, price);
@@ -46,25 +44,16 @@ contract VirtualNewLibertyStandard {
 
     function buy(uint256 saleId) payable external {
         Sale storage sale = sales[saleId];
-        uint256 _saleAmount = sale.amount;
-        uint256 _soldAmount = sale.soldAmount;
-
-        uint256 amount = _saleAmount * msg.value / sale.price;
-        require(amount <= _saleAmount - _soldAmount);
+        uint256 amount = sale.amount
         vbtc.transfer(msg.sender, amount);
-        _soldAmount += amount;
-        if (_saleAmount == _soldAmount) {
-            removeSale(saleId);
-        }
-        sale.soldAmount = _soldAmount;
-
+        removeSale(saleId);
         emit Buy(saleId, msg.sender, amount);
     }
 
     function cancelSale(uint256 saleId) external {
         Sale memory sale = sales[saleId];
         require(sale.seller == msg.sender);
-        vbtc.transfer(msg.sender, sale.amount - sale.soldAmount);
+        vbtc.transfer(msg.sender, sale.amount);
         removeSale(saleId);
         emit CancelSale(saleId);
     }
